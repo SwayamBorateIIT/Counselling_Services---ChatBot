@@ -40,10 +40,7 @@ Type a question; you may see:
 - `crisis` mode: crisis safety response
 - `fallback` mode: low-confidence reply
 
-## Endpoints
-- `POST /api/faq-match` – main chat endpoint `{ message }`
-- `POST /api/faq-by-id` – fetch an FAQ by id
-- `GET /api/llm-check` – quick Ollama connectivity check
+
 
 ## Notes
 - Embedding model runs locally via `@xenova/transformers`; first run downloads weights.
