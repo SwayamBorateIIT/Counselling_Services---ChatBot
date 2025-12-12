@@ -1,0 +1,116 @@
+[
+  {
+    "id": 1,
+    "title": "How does counseling work?",
+    "q": "How does counseling work?",
+    "a": "Psychological counseling focuses on facilitating personal and interpersonal functioning across the life span. The specialty pays particular attention to emotional, social, vocational, health-related and developmental concerns."
+  },
+  {
+    "id": 2,
+    "title": "Time-management and academic issues",
+    "q": "Do you help with time-management and academic issues?",
+    "a": "We use techniques from Occupational therapy for effective time-management as well as facilitate students to cope with their emotions while facing any academic difficulty. We facilitate them to connect better with their mentors."
+  },
+  {
+    "id": 3,
+    "title": "Reaching the counselors",
+    "q": "How do I reach the counselors?",
+    "a": "Counselors can be reached via email to cservices@iitgn.ac.in or the dropbox on the webpage. They have their offices in the Academic Blocks."
+  },
+  {
+    "id": 4,
+    "title": "Counseling fees",
+    "q": "Do I have to pay?",
+    "a": "No."
+  },
+  {
+    "id": 5,
+    "title": "Counseling framework at IITGN",
+    "q": "What framework of counseling techniques do counselors follow at IITGN?",
+    "a": "The counselors basically work using the scientifically validated behavioural therapy techniques."
+  },
+  {
+    "id": 6,
+    "title": "Mind reading and hypnotherapy",
+    "q": "Can counselors read my mind?",
+    "a": "We only work using the information that you share with your counselor. Mind reading and hypnotherapy or dream analysis are not practised."
+  },
+  {
+    "id": 7,
+    "title": "Counseling vs friends listening",
+    "q": "Is counseling the same thing as what my friends do when they hear me out?",
+    "a": "Counselors are trained professionals who have been trained in behaviour modification and emotional management. Their listening is based on empathetic understanding and unconditional positive regard instead of personal relationships."
+  },
+  {
+    "id": 8,
+    "title": "Sharing with family and friends",
+    "q": "Will counselors be able to understand that there are things I don’t want to share with family and friends?",
+    "a": "Counselors respect your decisions and maintain confidentiality."
+  },
+  {
+    "id": 9,
+    "title": "Disclosure to faculty or friends",
+    "q": "Will they disclose something to my faculty or friends?",
+    "a": "Counselors respect your decisions and maintain confidentiality."
+  },
+  {
+    "id": 10,
+    "title": "Psychological testing on campus",
+    "q": "Do counselors conduct psychometric or projective tests on campus?",
+    "a": "We do not conduct any psychological testing."
+  },
+  {
+    "id": 11,
+    "title": "Support outside scheduled sessions",
+    "q": "Can I call my counselor for support even when we don’t have a scheduled session?",
+    "a": "Counselors are available and can be reached on days you don’t have a scheduled session and are in a crisis situation."
+  },
+  {
+    "id": 12,
+    "title": "Meaning of a counseling session",
+    "q": "What is meant by a counseling session?",
+    "a": "A counseling session is a one on one session usually for 45 minutes to an hour wherein you can talk to your counselor in a closed setup (counselor’s office/online platform/telephone etc.)."
+  },
+  {
+    "id": 13,
+    "title": "Frequency of sessions",
+    "q": "How frequently do I have to meet my counselor?",
+    "a": "The frequency of the sessions is decided as per your requirement. Your counselor will generally need you to meet them at least once or twice a week initially."
+  },
+  {
+    "id": 14,
+    "title": "Consulting a psychiatrist",
+    "q": "Is it imperative to consult with a psychiatrist?",
+    "a": "Your counselor will discuss with you the need for psychiatric consultation, if any. It is not imperative or mandatory to do so. You have the complete freedom to make your decision in this respect."
+  },
+  {
+    "id": 15,
+    "title": "Reimbursement for psychiatrist and medicines",
+    "q": "Is there any reimbursement for the consultation with the psychiatrist and medicines? If yes, what is the procedure?",
+    "a": "To get reimbursement you need to take a referral from one of the doctors at the medical centre. The referral is valid for 3 months after which you need to visit the doctor again for a fresh one. Consultation and medication is reimbursed after submitting the original receipts to the medical centre."
+  },
+  {
+    "id": 16,
+    "title": "Meaning of confidentiality",
+    "q": "What is meant by confidentiality?",
+    "a": "The term confidentiality refers to the ethical principle in counseling which ensures that the counselor does not share anything discussed/mentioned by the person seeking counselling (referred to as a client) with anyone else."
+  },
+  {
+    "id": 17,
+    "title": "Exceptions to confidentiality",
+    "q": "What are the exceptions to the rule of confidentiality?",
+    "a": "As mentioned by the American Psychiatric Association, the only exception to the rule of confidentiality is threat to life. The counselor would only take people into confidence who can ensure the safety of the person concerned. Discretion is practised by not revealing the details of the matter."
+  },
+  {
+    "id": 18,
+    "title": "Public availability of information",
+    "q": "Is my information available to the public?",
+    "a": "Absolute confidentiality is practised and no details of the client are ever made public."
+  },
+  {
+    "id": 19,
+    "title": "Disclosure to foreign universities",
+    "q": "Do I have to disclose my consultation to the foreign universities I may apply to?",
+    "a": "The decision to disclose or take help at another university in India or abroad is entirely based on the student’s willingness. Counseling team does not share information about students with anyone (parents, faculty, prospective employers etc)."
+  }
+]

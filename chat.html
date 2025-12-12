@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IITGN Chatbot Demo</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    #messages { width: 400px; height: 400px; border: 1px solid #aaa; padding: 10px; overflow-y: scroll; }
+    .user { color: blue; margin: 5px 0; }
+    .bot { color: green; margin: 5px 0; }
+    button { margin-top: 10px; }
+  </style>
+</head>
+<body>
+
+<h2>IITGN Counselling Chatbot (Demo)</h2>
+
+<div id="messages"></div><br>
+
+<input id="input" size="50" placeholder="Ask a question..." />
+<button onclick="send()">Send</button>
+
+<script>
+async function send() {
+  const msg = document.getElementById("input").value;
+  if (!msg) return;
+
+  append(msg, "user");
+  document.getElementById("input").value = "";
+
+  const r = await fetch("http://localhost:3000/api/faq-match", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message: msg })
+  });
+
+  const res = await r.json();
+  handle(res);
+}
+
+function append(text, who) {
+  const m = document.getElementById("messages");
+  const div = document.createElement("div");
+  div.className = who;
+  div.textContent = (who === "user" ? "You: " : "Bot: ") + text;
+  m.appendChild(div);
+  m.scrollTop = m.scrollHeight;
+}
+
+async function handle(res) {
+  if (res.mode === "crisis") {
+    append(res.reply, "bot");
+    return;
+  }
+
+  if (res.mode === "answer") {
+    append(res.answer, "bot");
+    return;
+  }
+
+  if (res.mode === "suggest") {
+    append("Did you mean:", "bot");
+    (res.top || []).forEach((s) => {
+      const btn = document.createElement("button");
+      btn.innerText = s.title;
+      btn.onclick = async () => {
+        const r = await fetch("http://localhost:3000/api/faq-by-id", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: s.id })
+        });
+        const ans = await r.json();
+        append(ans.answer, "bot");
+      };
+      document.body.appendChild(btn);
+    });
+    return;
+  }
+
+  append(res.reply, "bot");
+}
+</script>
+
+</body>
+</html>
