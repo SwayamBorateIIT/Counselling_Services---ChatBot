@@ -212,16 +212,13 @@
 
     function closeChat() {
       chatWidget.classList.remove("open");
-      // Clear previous chat messages and reset state
       hideTyping();
       messagesDiv.innerHTML = "";
       input.value = "";
-      // Start a fresh session next time
       sessionId = "session-" + Math.random().toString(36).substring(2, 10);
     }
 
     function minimizeChat() {
-      // Hide without clearing chat history
       chatWidget.classList.remove("open");
     }
 
