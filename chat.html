@@ -10,30 +10,67 @@
       margin: 0;
       font-family: Arial, sans-serif;
       background: #f4f6f8;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
     }
 
-    .chat-container {
-      width: 100%;
-      max-width: 420px;
-      height: 90vh;
-      background: #ffffff;
+    /* Floating toggle button */
+    .chat-toggle {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      border: none;
+      background: #2563eb;
+      color: #fff;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+      cursor: pointer;
       display: flex;
-      flex-direction: column;
-      border-radius: 10px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-      overflow: hidden;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
     }
+
+    .chat-toggle:focus { outline: none; }
+
+    /* Floating chat widget */
+    .chat-container {
+      position: fixed;
+      bottom: 84px; /* above the toggle button */
+      right: 20px;
+      width: 360px;
+      height: 480px;
+      background: #ffffff;
+      display: none; /* hidden by default */
+      flex-direction: column;
+      border-radius: 12px;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.18);
+      overflow: hidden;
+      border: 1px solid #e5e7eb;
+    }
+
+    .chat-container.open { display: flex; }
 
     .chat-header {
       background: #2563eb;
       color: white;
-      padding: 14px;
-      text-align: center;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       font-weight: bold;
+    }
+
+    .chat-header .title { font-size: 14px; }
+    .chat-header .actions { display: flex; gap: 6px; }
+    .chat-header button {
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 6px 8px;
+      cursor: pointer;
+      font-size: 12px;
     }
 
     .chat-messages {
@@ -107,8 +144,20 @@
 </head>
 <body>
 
-  <div class="chat-container">
-    <div class="chat-header">Counselling FAQ Assistant</div>
+  <!-- Floating trigger button -->
+  <button id="chatToggle" class="chat-toggle" aria-label="Open chat" title="Chat">
+    💬
+  </button>
+
+  <!-- Floating chat widget -->
+  <div id="chatWidget" class="chat-container" aria-live="polite" aria-label="Chat widget">
+    <div class="chat-header">
+      <span class="title">Counselling FAQ Assistant</span>
+      <div class="actions">
+        <button id="minimizeBtn" title="Minimize">–</button>
+        <button id="closeBtn" title="Close">✕</button>
+      </div>
+    </div>
 
     <div id="messages" class="chat-messages"></div>
 
@@ -124,11 +173,15 @@
   </div>
 
   <script>
+    const chatWidget = document.getElementById("chatWidget");
+    const chatToggle = document.getElementById("chatToggle");
+    const minimizeBtn = document.getElementById("minimizeBtn");
+    const closeBtn = document.getElementById("closeBtn");
     const messagesDiv = document.getElementById("messages");
     const input = document.getElementById("userInput");
     const sendBtn = document.getElementById("sendBtn");
 
-    const sessionId = "session-" + Math.random().toString(36).substring(2, 10);
+    let sessionId = "session-" + Math.random().toString(36).substring(2, 10);
 
     function addMessage(text, sender) {
       const div = document.createElement("div");
@@ -151,6 +204,37 @@
       const typing = document.getElementById("typing");
       if (typing) typing.remove();
     }
+
+    function openChat() {
+      chatWidget.classList.add("open");
+      input.focus();
+    }
+
+    function closeChat() {
+      chatWidget.classList.remove("open");
+      // Clear previous chat messages and reset state
+      hideTyping();
+      messagesDiv.innerHTML = "";
+      input.value = "";
+      // Start a fresh session next time
+      sessionId = "session-" + Math.random().toString(36).substring(2, 10);
+    }
+
+    function minimizeChat() {
+      // Hide without clearing chat history
+      chatWidget.classList.remove("open");
+    }
+
+    chatToggle.addEventListener("click", () => {
+      if (chatWidget.classList.contains("open")) {
+        minimizeChat();
+      } else {
+        openChat();
+      }
+    });
+
+    minimizeBtn.addEventListener("click", minimizeChat);
+    closeBtn.addEventListener("click", closeChat);
 
     async function sendMessage() {
       const text = input.value.trim();
@@ -189,6 +273,8 @@
       if (e.key === "Enter") sendMessage();
     });
 
+    // Open chat on first load
+    openChat();
     // Welcome message
     addMessage(
       "Hello! I’m here to help with counselling-related questions. How can I assist you?",
