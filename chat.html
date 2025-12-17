@@ -1,86 +1,200 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>IITGN Chatbot Demo</title>
+  <meta charset="UTF-8" />
+  <title>FAQ AI Chatbot</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <style>
-    body { font-family: sans-serif; padding: 20px; }
-    #messages { width: 400px; height: 400px; border: 1px solid #aaa; padding: 10px; overflow-y: scroll; }
-    .user { color: blue; margin: 5px 0; }
-    .bot { color: green; margin: 5px 0; }
-    button { margin-top: 10px; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .chat-container {
+      width: 100%;
+      max-width: 420px;
+      height: 90vh;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      border-radius: 10px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    .chat-header {
+      background: #2563eb;
+      color: white;
+      padding: 14px;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    .chat-messages {
+      flex: 1;
+      padding: 14px;
+      overflow-y: auto;
+      background: #f9fafb;
+    }
+
+    .message {
+      margin-bottom: 12px;
+      max-width: 80%;
+      padding: 10px 14px;
+      border-radius: 16px;
+      line-height: 1.4;
+      font-size: 14px;
+    }
+
+    .user {
+      background: #2563eb;
+      color: white;
+      margin-left: auto;
+      border-bottom-right-radius: 4px;
+    }
+
+    .bot {
+      background: #e5e7eb;
+      color: #111827;
+      margin-right: auto;
+      border-bottom-left-radius: 4px;
+    }
+
+    .typing {
+      font-style: italic;
+      color: #6b7280;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    .chat-input {
+      display: flex;
+      padding: 10px;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .chat-input input {
+      flex: 1;
+      padding: 10px;
+      border-radius: 20px;
+      border: 1px solid #d1d5db;
+      outline: none;
+      font-size: 14px;
+    }
+
+    .chat-input button {
+      margin-left: 8px;
+      padding: 10px 16px;
+      border-radius: 20px;
+      border: none;
+      background: #2563eb;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .chat-input button:disabled {
+      background: #93c5fd;
+      cursor: not-allowed;
+    }
   </style>
 </head>
 <body>
 
-<h2>IITGN Counselling Chatbot (Demo)</h2>
+  <div class="chat-container">
+    <div class="chat-header">Counselling FAQ Assistant</div>
 
-<div id="messages"></div><br>
+    <div id="messages" class="chat-messages"></div>
 
-<input id="input" size="50" placeholder="Ask a question..." />
-<button onclick="send()">Send</button>
+    <div class="chat-input">
+      <input
+        id="userInput"
+        type="text"
+        placeholder="Type your question..."
+        autocomplete="off"
+      />
+      <button id="sendBtn">Send</button>
+    </div>
+  </div>
 
-<script>
-async function send() {
-  const msg = document.getElementById("input").value;
-  if (!msg) return;
+  <script>
+    const messagesDiv = document.getElementById("messages");
+    const input = document.getElementById("userInput");
+    const sendBtn = document.getElementById("sendBtn");
 
-  append(msg, "user");
-  document.getElementById("input").value = "";
+    const sessionId = "session-" + Math.random().toString(36).substring(2, 10);
 
-  const r = await fetch("http://localhost:3000/api/faq-match", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message: msg })
-  });
+    function addMessage(text, sender) {
+      const div = document.createElement("div");
+      div.className = `message ${sender}`;
+      div.innerText = text;
+      messagesDiv.appendChild(div);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
 
-  const res = await r.json();
-  handle(res);
-}
+    function showTyping() {
+      const div = document.createElement("div");
+      div.className = "typing";
+      div.id = "typing";
+      div.innerText = "Assistant is typing...";
+      messagesDiv.appendChild(div);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
 
-function append(text, who) {
-  const m = document.getElementById("messages");
-  const div = document.createElement("div");
-  div.className = who;
-  div.textContent = (who === "user" ? "You: " : "Bot: ") + text;
-  m.appendChild(div);
-  m.scrollTop = m.scrollHeight;
-}
+    function hideTyping() {
+      const typing = document.getElementById("typing");
+      if (typing) typing.remove();
+    }
 
-async function handle(res) {
-  if (res.mode === "crisis") {
-    append(res.reply, "bot");
-    return;
-  }
+    async function sendMessage() {
+      const text = input.value.trim();
+      if (!text) return;
 
-  if (res.mode === "answer") {
-    append(res.answer, "bot");
-    return;
-  }
+      addMessage(text, "user");
+      input.value = "";
+      sendBtn.disabled = true;
 
-  if (res.mode === "suggest") {
-    append("Did you mean:", "bot");
-    (res.top || []).forEach((s) => {
-      const btn = document.createElement("button");
-      btn.innerText = s.title;
-      btn.onclick = async () => {
-        const r = await fetch("http://localhost:3000/api/faq-by-id", {
+      showTyping();
+
+      try {
+        const res = await fetch("/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: s.id })
+          body: JSON.stringify({
+            message: text,
+            sessionId
+          })
         });
-        const ans = await r.json();
-        append(ans.answer, "bot");
-      };
-      document.body.appendChild(btn);
-    });
-    return;
-  }
 
-  append(res.reply, "bot");
-}
-</script>
+        const data = await res.json();
+        hideTyping();
+        addMessage(data.reply, "bot");
+
+      } catch (err) {
+        hideTyping();
+        addMessage("Something went wrong. Please try again.", "bot");
+      } finally {
+        sendBtn.disabled = false;
+      }
+    }
+
+    sendBtn.addEventListener("click", sendMessage);
+    input.addEventListener("keypress", e => {
+      if (e.key === "Enter") sendMessage();
+    });
+
+    // Welcome message
+    addMessage(
+      "Hello! I’m here to help with counselling-related questions. How can I assist you?",
+      "bot"
+    );
+  </script>
 
 </body>
 </html>
