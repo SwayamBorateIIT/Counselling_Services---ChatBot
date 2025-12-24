@@ -140,6 +140,31 @@
       background: #93c5fd;
       cursor: not-allowed;
     }
+
+    /* Suggestions UI */
+    .suggestions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .suggestion-btn {
+      background: #f3f4f6;
+      border: 1px solid #d1d5db;
+      border-radius: 12px;
+      padding: 10px 14px;
+      text-align: left;
+      cursor: pointer;
+      font-size: 13px;
+      color: #374151;
+      transition: all 0.2s;
+    }
+
+    .suggestion-btn:hover {
+      background: #e5e7eb;
+      border-color: #2563eb;
+    }
   </style>
 </head>
 <body>
@@ -253,16 +278,91 @@
           })
         });
 
-        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+
         hideTyping();
-        addMessage(data.reply, "bot");
+
+        // Create a bot message div that we'll update as chunks arrive
+        const messageDiv = document.createElement("div");
+        messageDiv.className = "message bot";
+        messageDiv.id = "streaming-message";
+        messagesDiv.appendChild(messageDiv);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+        let fullResponse = "";
+
+        // Read response as NDJSON stream
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+
+          // Keep last incomplete line in buffer
+          buffer = lines.pop() || "";
+
+          for (const line of lines) {
+            if (!line.trim()) continue;
+            try {
+              const json = JSON.parse(line);
+              if (json.chunk) {
+                fullResponse += json.chunk;
+                messageDiv.innerText = fullResponse;
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+              }
+              if (json.done) {
+                if (json.suggestions && json.suggestions.length) {
+                  displaySuggestions(json.suggestions);
+                }
+                break;
+              }
+            } catch (e) {
+              // Ignore JSON parse errors
+            }
+          }
+        }
+
+        // Final scroll
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
       } catch (err) {
         hideTyping();
         addMessage("Something went wrong. Please try again.", "bot");
+        console.error("Chat error:", err);
       } finally {
         sendBtn.disabled = false;
       }
+    }
+
+    function displaySuggestions(suggestions) {
+      // Remove any existing suggestions
+      const existing = document.querySelector('.suggestions');
+      if (existing) existing.remove();
+
+      const wrap = document.createElement('div');
+      wrap.className = 'suggestions';
+
+      suggestions.forEach(s => {
+        const btn = document.createElement('button');
+        btn.className = 'suggestion-btn';
+        btn.innerText = s.question;
+        btn.addEventListener('click', () => {
+          wrap.remove();
+          addMessage(s.question, 'user');
+          addMessage(s.answer, 'bot');
+        });
+        wrap.appendChild(btn);
+      });
+
+      messagesDiv.appendChild(wrap);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
 
     sendBtn.addEventListener("click", sendMessage);
