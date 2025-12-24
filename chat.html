@@ -6,9 +6,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
       background: #f4f6f8;
     }
 
@@ -17,18 +21,28 @@
       position: fixed;
       bottom: 20px;
       right: 20px;
-      width: 56px;
-      height: 56px;
+      width: 60px;
+      height: 60px;
       border-radius: 50%;
       border: none;
-      background: #2563eb;
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
       color: #fff;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+      box-shadow: 0 8px 24px rgba(37, 99, 235, 0.35);
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 22px;
+      font-size: 24px;
+      transition: all 0.3s ease;
+    }
+
+    .chat-toggle:hover {
+      transform: scale(1.1);
+      box-shadow: 0 12px 32px rgba(37, 99, 235, 0.45);
+    }
+
+    .chat-toggle:active {
+      transform: scale(0.95);
     }
 
     .chat-toggle:focus { outline: none; }
@@ -36,69 +50,124 @@
     /* Floating chat widget */
     .chat-container {
       position: fixed;
-      bottom: 84px; /* above the toggle button */
+      bottom: 90px;
       right: 20px;
-      width: 360px;
-      height: 480px;
+      width: 380px;
+      height: 550px;
       background: #ffffff;
-      display: none; /* hidden by default */
+      display: none;
       flex-direction: column;
-      border-radius: 12px;
-      box-shadow: 0 12px 32px rgba(0,0,0,0.18);
+      border-radius: 16px;
+      box-shadow: 0 20px 48px rgba(0, 0, 0, 0.12);
       overflow: hidden;
       border: 1px solid #e5e7eb;
+      animation: slideUp 0.3s ease-out;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .chat-container.open { display: flex; }
 
     .chat-header {
-      background: #2563eb;
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
       color: white;
-      padding: 12px 14px;
+      padding: 16px 18px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      font-weight: bold;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
     }
 
-    .chat-header .title { font-size: 14px; }
-    .chat-header .actions { display: flex; gap: 6px; }
+    .chat-header .title { 
+      font-size: 15px;
+      letter-spacing: 0.3px;
+    }
+    
+    .chat-header .actions { display: flex; gap: 8px; }
     .chat-header button {
-      background: rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.2);
       color: #fff;
       border: none;
-      border-radius: 8px;
-      padding: 6px 8px;
+      border-radius: 6px;
+      padding: 6px 10px;
       cursor: pointer;
-      font-size: 12px;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .chat-header button:hover {
+      background: rgba(255,255,255,0.3);
     }
 
     .chat-messages {
       flex: 1;
-      padding: 14px;
+      padding: 16px;
       overflow-y: auto;
-      background: #f9fafb;
+      background: #fafbfc;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .chat-messages::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .chat-messages::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .chat-messages::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 3px;
+    }
+
+    .chat-messages::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
     }
 
     .message {
-      margin-bottom: 12px;
-      max-width: 80%;
+      max-width: 85%;
       padding: 10px 14px;
-      border-radius: 16px;
-      line-height: 1.4;
+      border-radius: 14px;
+      line-height: 1.5;
       font-size: 14px;
+      word-wrap: break-word;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .user {
-      background: #2563eb;
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
       color: white;
       margin-left: auto;
       border-bottom-right-radius: 4px;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
     }
 
     .bot {
-      background: #e5e7eb;
-      color: #111827;
+      background: #e8eef9;
+      color: #1f2937;
       margin-right: auto;
       border-bottom-left-radius: 4px;
     }
@@ -107,38 +176,82 @@
       font-style: italic;
       color: #6b7280;
       font-size: 13px;
-      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .typing::after {
+      content: "";
+      display: inline-block;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: #6b7280;
+      animation: typing 1.4s infinite;
+      margin-left: 4px;
+    }
+
+    @keyframes typing {
+      0%, 60%, 100% { opacity: 0.3; }
+      30% { opacity: 1; }
     }
 
     .chat-input {
       display: flex;
-      padding: 10px;
+      padding: 12px;
+      background: #ffffff;
       border-top: 1px solid #e5e7eb;
+      gap: 8px;
     }
 
     .chat-input input {
       flex: 1;
-      padding: 10px;
-      border-radius: 20px;
+      padding: 10px 14px;
+      border-radius: 22px;
       border: 1px solid #d1d5db;
       outline: none;
       font-size: 14px;
+      font-family: inherit;
+      transition: all 0.2s;
+      background: #f9fafb;
+    }
+
+    .chat-input input:focus {
+      background: #ffffff;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .chat-input input::placeholder {
+      color: #9ca3af;
     }
 
     .chat-input button {
-      margin-left: 8px;
-      padding: 10px 16px;
-      border-radius: 20px;
+      padding: 10px 18px;
+      border-radius: 22px;
       border: none;
-      background: #2563eb;
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
       color: white;
       cursor: pointer;
       font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .chat-input button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+
+    .chat-input button:active {
+      transform: translateY(0);
     }
 
     .chat-input button:disabled {
-      background: #93c5fd;
+      background: linear-gradient(135deg, #93c5fd 0%, #60a5fa 100%);
       cursor: not-allowed;
+      transform: none;
     }
 
     /* Suggestions UI */
@@ -146,24 +259,38 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
-      margin-top: 8px;
+      margin-top: 6px;
+      padding: 0 4px;
     }
 
     .suggestion-btn {
-      background: #f3f4f6;
-      border: 1px solid #d1d5db;
-      border-radius: 12px;
-      padding: 10px 14px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 10px 12px;
       text-align: left;
       cursor: pointer;
       font-size: 13px;
       color: #374151;
       transition: all 0.2s;
+      font-family: inherit;
     }
 
     .suggestion-btn:hover {
-      background: #e5e7eb;
+      background: #f0f4ff;
       border-color: #2563eb;
+      transform: translateX(4px);
+    }
+
+    .disclaimer {
+      padding: 10px 12px;
+      background: #f0f4ff;
+      border-top: 1px solid #d4d9f0;
+      font-size: 12px;
+      color: #3730a3;
+      text-align: center;
+      line-height: 1.4;
+      font-weight: 500;
     }
   </style>
 </head>
@@ -185,6 +312,10 @@
     </div>
 
     <div id="messages" class="chat-messages"></div>
+
+    <div class="disclaimer">
+      The chatbot is for informational purposes only and may not provide accurate responses; please contact us directly for specific queries.
+    </div>
 
     <div class="chat-input">
       <input
