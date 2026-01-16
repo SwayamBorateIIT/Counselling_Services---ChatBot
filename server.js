@@ -24,13 +24,19 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 const FAQ_FILE = "./faqs_with_embeddings.json";
-const OLLAMA_URL = "http://localhost:11434/api/generate";
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "mistral";
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const GROQ_MODEL = process.env.GROQ_MODEL || "mixtral-8x7b-32768";
+const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 const EMERGENCY_NUMBER = process.env.EMERGENCY_NUMBER || "+91-1800-XXXX-XXXX"; // Configure in .env
 
+if (!GROQ_API_KEY) {
+  console.error("ERROR: GROQ_API_KEY is not set in .env file");
+  process.exit(1);
+}
+
 // Retrieval tuning
-const TOP_K = 3;
-const VECTOR_THRESHOLD = 0.45;
+const TOP_K = 4;
+const VECTOR_THRESHOLD = 0.4;
 
 // Safety & UX
 const GREETING_REGEX = /^(hi|hello|hey|greetings|good morning|good evening)/i;
@@ -70,6 +76,44 @@ const CRISIS_KEYWORDS = [
   "no one cares",
   "nobody loves me",
   "i'm a burden"
+];
+
+// Depression indicators for IPOD session recommendations
+const DEPRESSION_KEYWORDS = [
+  "depressed",
+  "depression",
+  "sad",
+  "feeling low",
+  "feeling down",
+  "lonely",
+  "alone",
+  "isolated",
+  "anxious",
+  "anxiety",
+  "stressed",
+  "stress",
+  "overwhelmed",
+  "tired of everything",
+  "exhausted",
+  "no energy",
+  "unmotivated",
+  "lost interest",
+  "empty",
+  "numb",
+  "struggling",
+  "having a hard time",
+  "difficult time",
+  "need help",
+  "mental health",
+  "emotional",
+  "crying",
+  "can't focus",
+  "can't sleep",
+  "insomnia",
+  "worried",
+  "fear",
+  "scared",
+  "panic"
 ];
 
 // Regex patterns to catch common variations regardless of apostrophes or spacing
@@ -242,7 +286,14 @@ app.post("/chat", async (req, res) => {
       CRISIS_PATTERNS.some(re => re.test(lowerMsg));
 
     if (isCrisis) {
-      return streamResponse(res, `If you are feeling unsafe or overwhelmed, please reach out immediately:\n\n📞 Emergency Number: ${EMERGENCY_NUMBER}\n🏥 IIT Gandhinagar Medical Center\n💬 Contact a trusted person or local emergency services\n\nYou are not alone. Help is available.`);
+      return streamResponse(res, `If you are feeling unsafe or overwhelmed, please reach out immediately:\n\n📞 Emergency Number: ${EMERGENCY_NUMBER}\n🏥 IIT Gandhinagar Medical Center\n💬 Contact a trusted person or local emergency services\n\n🧘 **IPOD Session - Inner Peace and Outer Dynamism**\nJoin us every Wednesday, 6:30-7:30 PM at the Multipurpose Hall for music, meditation, and connection. It's a space for wellness, peace, and reconnection with yourself and others.\n\nYou are not alone. Help is available.`);
+    }
+
+    // --- Depression/Mental Health Detection for IPOD recommendation ---
+    const isDepressed = DEPRESSION_KEYWORDS.some(k => normalizedMsg.includes(k));
+    
+    if (isDepressed) {
+      return streamResponse(res, `I'm here to help you. It sounds like you might be going through a difficult time. 💙\n\n**Here are some resources that may help:**\n\n🧘 **IPOD Session - Inner Peace and Outer Dynamism**\n📅 Every Wednesday, 6:30-7:30 PM\n📍 Multipurpose Hall\nJoin us for music, meditation, and a supportive community. It's a wonderful opportunity to reconnect with yourself and find some peace.\n\n📧 **Counselling Services**: cservices@iitgn.ac.in\n📞 **Emergency Support**: ${EMERGENCY_NUMBER}\n🏥 **IIT Gandhinagar Medical Center** is also available\n\nRemember, reaching out is a sign of strength. You don't have to face this alone. Would you like to know more about our counselling services?`);
     }
 
     // --- Greeting ---
@@ -268,34 +319,51 @@ app.post("/chat", async (req, res) => {
 
     const prompt = buildPrompt(relevantFAQs, message);
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-    // --- Call Ollama with Streaming ---
-    let ollamaResponse;
+    // --- Call Groq with Streaming ---
+    let groqResponse;
     try {
-      ollamaResponse = await fetch(OLLAMA_URL, {
+      groqResponse = await fetch(GROQ_URL, {
         method: "POST",
         signal: controller.signal,
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${GROQ_API_KEY}`
+        },
         body: JSON.stringify({
-          model: OLLAMA_MODEL,
-          prompt,
-          stream: true,
-          options: {
-            temperature: 0.0
-          }
+          model: GROQ_MODEL,
+          messages: [
+            {
+              role: "system",
+              content: "You are a helpful and empathetic assistant for IIT Gandhinagar Counselling Services. Answer strictly based on the provided context."
+            },
+            {
+              role: "user",
+              content: prompt
+            }
+          ],
+          temperature: 0.0,
+          max_tokens: 1024,
+          stream: true
         })
       });
     } catch (err) {
       clearTimeout(timeoutId);
-      console.error("Ollama fetch error:", err);
+      console.error("Groq fetch error:", err);
       return res.status(500).json({ reply: "Failed to connect to LLM. Please try again." });
     }
 
     clearTimeout(timeoutId);
 
-    if (!ollamaResponse.ok) {
-      console.error(`Ollama error ${ollamaResponse.status}`);
+    if (!groqResponse.ok) {
+      const errorText = await groqResponse.text();
+      console.error(`Groq error ${groqResponse.status}:`, errorText);
+      console.error("Request was:", {
+        url: GROQ_URL,
+        model: GROQ_MODEL,
+        hasApiKey: !!GROQ_API_KEY
+      });
       return res.status(500).json({ reply: "LLM error. Please try again." });
     }
 
@@ -307,7 +375,7 @@ app.post("/chat", async (req, res) => {
     let buffer = "";
 
     await new Promise((resolve, reject) => {
-      ollamaResponse.body.on("data", (chunk) => {
+      groqResponse.body.on("data", (chunk) => {
         buffer += chunk.toString();
         const lines = buffer.split("\n");
 
@@ -315,26 +383,37 @@ app.post("/chat", async (req, res) => {
 
         for (const line of lines) {
           if (!line.trim()) continue;
-          try {
-            const json = JSON.parse(line);
-            if (json.response) {
-              fullResponse += json.response;
-              res.write(JSON.stringify({ chunk: json.response, done: false }) + "\n");
+          if (line.startsWith("data: ")) {
+            const data = line.slice(6);
+            if (data === "[DONE]") continue;
+            try {
+              const json = JSON.parse(data);
+              const content = json.choices?.[0]?.delta?.content;
+              if (content) {
+                fullResponse += content;
+                res.write(JSON.stringify({ chunk: content, done: false }) + "\n");
+              }
+            } catch (e) {
             }
-          } catch (e) {
           }
         }
       });
 
-      ollamaResponse.body.on("end", () => {
+      groqResponse.body.on("end", () => {
         if (buffer.trim()) {
-          try {
-            const json = JSON.parse(buffer);
-            if (json.response) {
-              fullResponse += json.response;
-              res.write(JSON.stringify({ chunk: json.response, done: false }) + "\n");
+          if (buffer.startsWith("data: ")) {
+            const data = buffer.slice(6);
+            if (data !== "[DONE]") {
+              try {
+                const json = JSON.parse(data);
+                const content = json.choices?.[0]?.delta?.content;
+                if (content) {
+                  fullResponse += content;
+                  res.write(JSON.stringify({ chunk: content, done: false }) + "\n");
+                }
+              } catch (e) {}
             }
-          } catch (e) {}
+          }
         }
 
         const suggestions = relevantFAQs.slice(0, 2).map(faq => ({
@@ -347,7 +426,7 @@ app.post("/chat", async (req, res) => {
         resolve();
       });
 
-      ollamaResponse.body.on("error", (err) => {
+      groqResponse.body.on("error", (err) => {
         console.error("Stream error:", err);
         res.write(JSON.stringify({ error: "Stream error", done: true }) + "\n");
         res.end();

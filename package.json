@@ -3,9 +3,7 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "setup": "npm install && npm run pull-model",
-    "pull-model": "ollama pull mistral:7b-instruct",
-    "check-ollama": "ollama list",
+    "setup": "npm install",
     "dev": "node server.js"
   },
   "dependencies": {
